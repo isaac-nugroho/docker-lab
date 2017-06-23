@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-FROM        nimmis/java-centos:openjdk-7-jdk
+FROM        nimmis/java-centos:openjdk-8-jdk
 
 MAINTAINER  isaac.nugroho@gmail.com
 
@@ -45,7 +45,8 @@ RUN         yum update -y \
               dnsutils \
               net-tools \
               xz \
-              vim-minimal \
+              vim \
+              which \
               libc-bin && \
             yum clean all \
             && rm -rf /etc/ld.so.cache \
@@ -79,13 +80,14 @@ RUN         sed -i \
             	/etc/sudoers
 
 #RUN         systemctl enable ntp.service
-RUN         usermod -d /home/nobody -s /bin/bash -G wheel nobody \
+RUN         usermod -d /home/nobody -s /bin/bash -p P@ssw0rd -G wheel nobody \
             && usermod -U nobody \
             && cp -r /etc/skel /home/nobody \
             && mkdir -p /home/nobody/.ssh
 
 ADD         nobody/ /home/nobody/.ssh/
 ADD         authorized_keys /home/nobody/.ssh/
+ADD         java-home.sh /etc/profile.d/
 
 RUN         chown -R nobody:nobody /home/nobody \
             && chmod 700 /home/nobody/.ssh \
@@ -97,5 +99,5 @@ RUN         chown -R nobody:nobody /home/nobody \
 
 EXPOSE      22
 
-CMD         ["/usr/bin/supervisord", "--configuration=/etc/supervisord.conf"]
+CMD         ["/usr/bin/sudo", "-E", "/usr/bin/supervisord", "--configuration=/etc/supervisord.conf"]
 #CMD         ["bash"]

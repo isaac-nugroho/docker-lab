@@ -1,0 +1,38 @@
+#!/bin/bash
+
+source /usr/bin/config.shlib
+
+echo $INSTANCE_NAME $SLOT_NAME
+SLOT_DIR=/data/instance-config/$INSTANCE_NAME/$SLOT_NAME
+CONFIG_FILE=$SLOT_DIR/config
+
+# kill previous instance
+if [[ -s /tmp/$SLOT_NAME.pid ]]; then
+  kill $(cat /tmp/${SLOT_NAME}.pid)
+fi
+
+configured=0
+cd /home/
+if [[ -s $CONFIG_FILE ]]; then
+  SERVICE_NAME=$(config-get $CONFIG_FILE "SERVICE_NAME")
+  SERVICE_BINARY=$(config-get $CONFIG_FILE "SERVICE_BINARY")
+  SERVICE_PARAMETERS=$(config-get $CONFIG_FILE "SERVICE_PARAMETERS")
+  if [[ "$SERVICE_NAME" != "__UNDEFINED__" ]]; then
+    if [[ "x$SERVICE_NAME" != "x" ]]; then
+      if [[ -e "/data/repository/$SERVICE_BINARY" ]]; then
+        configured=1
+        if [[ "$SERVICE_PARAMETERS" == "__UNDEFINED__" ]]; then
+          SERVICE_PARAMETERS=""
+        fi
+        cp -f "/data/repository/$SERVICE_BINARY" /home/nobody/service.jar
+        java $SERVICE_PARAMETERS -jar /home/nobody/service.jar
+      fi
+    fi
+  fi
+fi
+
+if [[ configured -eq 0 ]]; then
+  echo $$ > /tmp/${SLOT_NAME}.pid
+  echo "$SLOT_NAME: No service"
+  while :; do sleep 1; done
+fi
