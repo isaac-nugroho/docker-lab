@@ -22,7 +22,6 @@ USER        root
 ADD         supervisor/ /etc/
 ADD         run-service /usr/bin/
 ADD         resolve-dns /usr/bin/
-ADD         config.shlib /usr/bin/
 
 RUN         chmod +x /usr/bin/resolve-dns /usr/bin/run-service
 
@@ -39,3 +38,5 @@ ENV         USER=nobody
 ENV         INSTANCE_NAME=instance-1
 
 VOLUME      /data
+
+EXPOSE      8180 8181 8182 8183 8184

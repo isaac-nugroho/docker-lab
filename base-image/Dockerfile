@@ -23,17 +23,21 @@ RUN         rpm --rebuilddb \
           	&& rpm --import https://dl.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-7 \
           	&& rpm --import https://dl.iuscommunity.org/pub/ius/IUS-COMMUNITY-GPG-KEY
 
-RUN         yum update -y \
-            && yum install --setopt=tsflags=nodocs -y \
+# disable fastestmirror plugin
+
+RUN         sed -i -e 's/^enabled=1/enabled=0/' /etc/yum/pluginconf.d/fastestmirror.conf
+
+RUN         yum update -y
+RUN         yum install --setopt=tsflags=nodocs -y \
               centos-release-scl \
               centos-release-scl-rh \
               https://centos7.iuscommunity.org/ius-release.rpm \
-            && yum install --setopt=tsflags=nodocs -y \
+              epel-release
+RUN         yum install --setopt=tsflags=nodocs -y \
               less \
               sudo \
               rsync \
               bash \
-              epel-release \
               openssh \
               openssh-server \
               openssh-clients \
@@ -42,11 +46,12 @@ RUN         yum update -y \
               inotify-tools \
               curl \
               wget \
-              dnsutils \
               net-tools \
+              bzip2 \
+              unzip \
               xz \
-              vim \
               which \
+              cronie \
               libc-bin && \
             yum clean all \
             && rm -rf /etc/ld.so.cache \
@@ -80,6 +85,8 @@ RUN         sed -i \
             	/etc/sudoers
 
 #RUN         systemctl enable ntp.service
+RUN         usermod -u 65534 nobody \
+            && groupmod -g 65534 nobody
 RUN         usermod -d /home/nobody -s /bin/bash -p P@ssw0rd -G wheel nobody \
             && usermod -U nobody \
             && cp -r /etc/skel /home/nobody \
@@ -89,7 +96,8 @@ ADD         nobody/ /home/nobody/.ssh/
 ADD         authorized_keys /home/nobody/.ssh/
 ADD         java-home.sh /etc/profile.d/
 
-RUN         chown -R nobody:nobody /home/nobody \
+RUN         mkdir -p /home/nobody/.m2 \
+            && chown -R nobody:nobody /home/nobody \
             && chmod 700 /home/nobody/.ssh \
             && chmod 600 /home/nobody/.ssh/id_rsa /home/nobody/.ssh/authorized_keys
 
