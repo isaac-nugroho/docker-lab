@@ -22,6 +22,7 @@ USER        root
 ADD         supervisor/ /etc/
 ADD         run-service /usr/bin/
 ADD         resolve-dns /usr/bin/
+ADD         config.shlib /usr/bin/
 
 RUN         chmod +x /usr/bin/resolve-dns /usr/bin/run-service
 
