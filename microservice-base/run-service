@@ -55,7 +55,6 @@ if [[ -s $SLOT_ENVIRONMENT_FILE ]]; then
 fi
 
 configured=0
-cd /home/
 if [[ -s $CONFIG_FILE ]]; then
   SERVICE_NAME=$(config_get $CONFIG_FILE "SERVICE_NAME")
   SERVICE_BINARY=$(config_get $CONFIG_FILE "SERVICE_BINARY")
@@ -67,8 +66,10 @@ if [[ -s $CONFIG_FILE ]]; then
         if [[ "$SERVICE_PARAMETERS" == "__UNDEFINED__" ]]; then
           SERVICE_PARAMETERS=""
         fi
-        cp -f "/data/repository/$SERVICE_BINARY" /home/nobody/service-$SLOT_NAME.jar
-        java $SERVICE_PARAMETERS -jar /home/nobody/service-$SLOT_NAME.jar
+        mkdir -p $HOME/$SLOT_NAME
+        cp -f "/data/repository/$SERVICE_BINARY" $HOME/$SLOT_NAME/service-$SLOT_NAME.jar
+        cd $HOME/$SLOT_NAME
+        java $SERVICE_PARAMETERS -jar $HOME/$SLOT_NAME/service-$SLOT_NAME.jar
       fi
     fi
   fi
