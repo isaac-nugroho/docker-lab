@@ -37,10 +37,14 @@ fi
 
 echo $$ > /tmp/${SLOT_NAME}.pid
 
-SLOT_DIR=/data/instance-config/$INSTANCE_NAME/$SLOT_NAME
+REPOSITORY_DIR=/data/repository
+INSTANCE_CONFIG_DIR=/data/instance-config/$INSTANCE_NAME
+
+SLOT_DIR=$INSTANCE_CONFIG_DIR/$SLOT_NAME
 CONFIG_FILE=$SLOT_DIR/config
-INSTANCE_ENVIRONMENT_FILE=/data/instance-config/$INSTANCE_NAME/environment
-SLOT_ENVIRONMENT_FILE=/data/instance-config/$INSTANCE_NAME/$SLOT_NAME/environment
+
+INSTANCE_ENVIRONMENT_FILE=INSTANCE_CONFIG_DIR/environment
+SLOT_ENVIRONMENT_FILE=$SLOT_DIR/environment
 
 if [[ ! -d $SLOT_DIR ]]; then
   mkdir -p $SLOT_DIR 2>/dev/null
@@ -61,15 +65,16 @@ if [[ -s $CONFIG_FILE ]]; then
   SERVICE_PARAMETERS=$(config_get $CONFIG_FILE "SERVICE_PARAMETERS")
   if [[ "$SERVICE_NAME" != "__UNDEFINED__" ]]; then
     if [[ "x$SERVICE_NAME" != "x" ]]; then
-      if [[ -e "/data/repository/$SERVICE_BINARY" ]]; then
+      if [[ -e "$REPOSITORY_DIR/$SERVICE_BINARY" ]]; then
         configured=1
         if [[ "$SERVICE_PARAMETERS" == "__UNDEFINED__" ]]; then
           SERVICE_PARAMETERS=""
         fi
-        mkdir -p $HOME/$SLOT_NAME
-        cp -f "/data/repository/$SERVICE_BINARY" $HOME/$SLOT_NAME/service-$SLOT_NAME.jar
+        mkdir -p $HOME/$SLOT_NAME/logs
+        cp -f "$REPOSITORY_DIR/$SERVICE_BINARY" $HOME/$SLOT_NAME/service-$SLOT_NAME.jar
         cd $HOME/$SLOT_NAME
-        java $SERVICE_PARAMETERS -jar $HOME/$SLOT_NAME/service-$SLOT_NAME.jar
+        env 1>&2
+        java $SERVICE_PARAMETERS -jar $HOME/$SLOT_NAME/service-$SLOT_NAME.jar 2>&1 | tee -a $HOME/$SLOT_NAME/logs/${SERVICE_NAME}.log
       fi
     fi
   fi
