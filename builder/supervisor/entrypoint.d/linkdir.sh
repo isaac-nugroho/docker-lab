@@ -22,4 +22,5 @@ chown nobody:nobody repository
 
 if [[ -d /data/.ssh ]]; then
   cp /data/.ssh/* /home/nobody/.ssh/
+  chown nobody:nobody /home/nobody/.ssh/*
 fi
