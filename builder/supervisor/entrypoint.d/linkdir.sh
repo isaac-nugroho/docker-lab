@@ -9,10 +9,17 @@ if [[ ! -d /data/gradle-workdir ]]; then
   chown -R nobody:nobody /data/gradle-workdir
 fi
 
-cd /home/nobody
-ln -s /data/gradle-workdir .gradle
-chown nobody:nobody .gradle
+mkdir -p /home/nobody/.gradle
+cd /home/nobody/.gradle
+ln -s /data/gradle-workdir/caches caches
+ln -s /data/gradle-workdir/native native
+ln -s /data/gradle-workdir/wrapper wrapper
+chown nobody:nobody -R /home/nobody/.gradle
 
 cd /home/nobody/.m2
 ln -s /data/repository repository
 chown nobody:nobody repository
+
+if [[ -d /data/.ssh ]]; then
+  cp /data/.ssh/* /home/nobody/.ssh/
+fi
