@@ -43,7 +43,7 @@ INSTANCE_CONFIG_DIR=/data/instance-config/$INSTANCE_NAME
 SLOT_DIR=$INSTANCE_CONFIG_DIR/$SLOT_NAME
 CONFIG_FILE=$SLOT_DIR/config
 
-INSTANCE_ENVIRONMENT_FILE=INSTANCE_CONFIG_DIR/environment
+INSTANCE_ENVIRONMENT_FILE=$INSTANCE_CONFIG_DIR/environment
 SLOT_ENVIRONMENT_FILE=$SLOT_DIR/environment
 
 if [[ ! -d $SLOT_DIR ]]; then
@@ -51,10 +51,12 @@ if [[ ! -d $SLOT_DIR ]]; then
 fi
 
 if [[ -s $INSTANCE_ENVIRONMENT_FILE ]]; then
+  cat $INSTANCE_ENVIRONMENT_FILE
   source $INSTANCE_ENVIRONMENT_FILE
 fi
 
 if [[ -s $SLOT_ENVIRONMENT_FILE ]]; then
+  cat $SLOT_ENVIRONMENT_FILE
   source $SLOT_ENVIRONMENT_FILE
 fi
 
@@ -73,8 +75,7 @@ if [[ -s $CONFIG_FILE ]]; then
         mkdir -p $HOME/$SLOT_NAME/logs
         cp -f "$REPOSITORY_DIR/$SERVICE_BINARY" $HOME/$SLOT_NAME/service-$SLOT_NAME.jar
         cd $HOME/$SLOT_NAME
-        env 1>&2
-        java $SERVICE_PARAMETERS -jar $HOME/$SLOT_NAME/service-$SLOT_NAME.jar 2>&1 | tee -a $HOME/$SLOT_NAME/logs/${SERVICE_NAME}.log
+        java $SERVICE_PARAMETERS -jar $HOME/$SLOT_NAME/service-$SLOT_NAME.jar 2>&1 >> $HOME/$SLOT_NAME/logs/${SERVICE_NAME}.log
       fi
     fi
   fi
