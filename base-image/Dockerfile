@@ -14,96 +14,46 @@
 # limitations under the License.
 #
 
-FROM        nimmis/java-centos:openjdk-8-jdk
+FROM      alpine:3.6
 
-MAINTAINER  isaac.nugroho@gmail.com
+USER      root
 
-RUN         rpm --rebuilddb \
-          	&& rpm --import http://mirror.centos.org/centos/RPM-GPG-KEY-CentOS-7 \
-          	&& rpm --import https://dl.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-7 \
-          	&& rpm --import https://dl.iuscommunity.org/pub/ius/IUS-COMMUNITY-GPG-KEY
+# /dev/urandom is used as random source, which is prefectly safe
+# according to http://www.2uo.de/myths-about-urandom/
+RUN       apk add --update \
+            curl \
+            wget \
+            sudo \
+            openssh \
+            bash \
+            openjdk8 \
+            bzip2 \
+            unzip \
+            python2 \
+            py2-pip \
+            inotify-tools \
+          && echo "securerandom.source=file:/dev/urandom" >> /usr/lib/jvm/default-jvm/jre/lib/security/java.security \
+          && pip install supervisor \
+          && rm -rf /var/cache/apk/* /tmp/* \
+          && sed -i -e "/^nobody/d" /etc/passwd \
+          && sed -i -e "/^nobody/d" /etc/shadow \
+          && sed -i -e "/^nobody/d" /etc/group \
+          && sed -i -e "/^nogroup/d" /etc/group \
+          && addgroup -g 65534 nobody \
+          && adduser -h /home/nobody -g "" -s /bin/bash -G nobody -D -u65534 nobody \
+          && passwd -u nobody \
+          && echo "nobody ALL=(ALL) NOPASSWD: ALL" > "/etc/sudoers.d/nobody" \
+          && chmod 0440 "/etc/sudoers.d/nobody" \
+          && echo '' >> /etc/ssh/sshd_config \
+          && echo 'AllowUsers nobody' >> /etc/ssh/sshd_config \
+          && ssh-keygen -h -b 4096 -f /etc/ssh/ssh_host_rsa_key -N "" \
+          && mkdir -p /var/log/supervisor \
+          && touch /var/log/supervisor/supervisord.log
 
-# disable fastestmirror plugin
-
-RUN         sed -i -e 's/^enabled=1/enabled=0/' /etc/yum/pluginconf.d/fastestmirror.conf
-
-RUN         yum update -y
-RUN         yum install --setopt=tsflags=nodocs -y \
-              centos-release-scl \
-              centos-release-scl-rh \
-              https://centos7.iuscommunity.org/ius-release.rpm \
-              epel-release
-RUN         yum install --setopt=tsflags=nodocs -y \
-              less \
-              sudo \
-              rsync \
-              bash \
-              openssh \
-              openssh-server \
-              openssh-clients \
-              openssl \
-              python-setuptools \
-              inotify-tools \
-              curl \
-              wget \
-              net-tools \
-              bzip2 \
-              unzip \
-              xz \
-              which \
-              cronie \
-              libc-bin && \
-            yum clean all \
-            && rm -rf /etc/ld.so.cache \
-          	&& rm -rf /sbin/sln \
-          	&& rm -rf /usr/{{lib,share}/locale,share/{man,doc,info,cracklib,i18n},{lib,lib64}/gconv,bin/localedef,sbin/build-locale-archive} \
-          	&& rm -rf /{root,tmp,var/cache/{ldconfig,yum}}/*
-#          	&& > /etc/sysconfig/i18n
-
-RUN         easy_install pip && pip install supervisor supervisor-stdout
 ADD         supervisor/ /etc/
-ADD         supervisord /etc/rc.d/init.d/
-
-RUN         mkdir -p /var/log/supervisor && touch /var/log/supervisor/supervisord.log
-
-RUN         ln -sf /usr/share/zoneinfo/Asia/Jakarta /etc/localtime \
-            && echo "NETWORKING=yes" > /etc/sysconfig/network
-
-RUN         sed -i \
-              -e 's~^PasswordAuthentication yes~PasswordAuthentication no~g' \
-              -e 's~^#PermitRootLogin yes~PermitRootLogin no~g' \
-              -e 's~^#UseDNS yes~UseDNS no~g' \
-              -e 's~^\(.*\)/usr/libexec/openssh/sftp-server$~\1internal-sftp~g' \
-              /etc/ssh/sshd_config \
-            && echo '' >> /etc/ssh/sshd_config \
-            && echo 'AllowUsers nobody' >> /etc/ssh/sshd_config \
-            && ssh-keygen -h -b 4096 -f /etc/ssh/ssh_host_rsa_key -N ""
-
-RUN         sed -i \
-            	-e 's~^# %wheel\tALL=(ALL)\tNOPASSWD: ALL~%wheel\tALL=(ALL)\tNOPASSWD: ALL~g' \
-            	-e 's~\(.*\) requiretty$~#\1requiretty~' \
-            	/etc/sudoers
-
-#RUN         systemctl enable ntp.service
-RUN         usermod -u 65534 nobody \
-            && groupmod -g 65534 nobody
-RUN         usermod -d /home/nobody -s /bin/bash -p P@ssw0rd -G wheel nobody \
-            && usermod -U nobody \
-            && cp -r /etc/skel /home/nobody \
-            && mkdir -p /home/nobody/.ssh
-
+ADD         java-home /etc/profile.d/
 ADD         nobody/ /home/nobody/.ssh/
 ADD         authorized_keys /home/nobody/.ssh/
-ADD         java-home.sh /etc/profile.d/
-
-RUN         mkdir -p /home/nobody/.m2 \
-            && chown -R nobody:nobody /home/nobody \
-            && chmod 700 /home/nobody/.ssh \
-            && chmod 600 /home/nobody/.ssh/id_rsa /home/nobody/.ssh/authorized_keys
-
-#USER        nobody
-#ENV         HOME=/home/nobody
-#WORKDIR     /home/nobody
 
 EXPOSE      22
 

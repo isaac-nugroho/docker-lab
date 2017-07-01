@@ -24,13 +24,9 @@ ADD         run-service /usr/bin/
 ADD         resolve-dns /usr/bin/
 ADD         config.shlib /usr/bin/
 
-RUN         chmod +x /usr/bin/resolve-dns /usr/bin/run-service
-
-RUN         mkdir -p /data/dns \
-            && mkdir -p /data/repository \
+RUN         chmod +x /usr/bin/resolve-dns /usr/bin/run-service \
             && mkdir -p /home/nobody/.m2 \
-            && chown nobody:nobody /home/nobody/.m2 \
-            && ln -s /data/repository /home/nobody/.m2/repository
+            && chown nobody:nobody /home/nobody/.m2
 
 USER        nobody
 ENV         HOME=/home/nobody

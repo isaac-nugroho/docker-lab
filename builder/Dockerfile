@@ -18,24 +18,12 @@ FROM        inugroho/base-image
 
 MAINTAINER  isaac.nugroho@gmail.com
 
-RUN         yum install --setopt=tsflags=nodocs -y \
+USER        root
+RUN         apk --no-cache add \
               git \
+              maven \
               nodejs \
-              npm \
-              http-parser.x86_64 \
-            && yum clean all
-
-RUN         wget http://mirror.cc.columbia.edu/pub/software/apache/maven/maven-3/3.5.0/binaries/apache-maven-3.5.0-bin.tar.gz \
-            && sudo tar xzf apache-maven-3.5.0-bin.tar.gz -C /usr/local \
-            && cd /usr/local \
-            && ln -s apache-maven-3.5.0 maven \
-            && echo 'export PATH=/usr/local/maven/bin:${PATH}' > /etc/profile.d/maven.sh
-
-RUN         wget https://services.gradle.org/distributions/gradle-3.5-bin.zip \
-            && mkdir /opt/gradle \
-            && unzip -d /opt/gradle gradle-3.5-bin.zip \
-            && cd /usr/bin \
-            && ln -s /opt/gradle/bin/gradle gradle
+              nodejs-npm
 
 ADD         supervisor/ /etc/
 

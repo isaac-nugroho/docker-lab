@@ -28,10 +28,12 @@ echo $INSTANCE_NAME $SLOT_NAME
 # kill previous instance
 if [[ -s /tmp/$SLOT_NAME.pid ]]; then
   PID=$(cat /tmp/${SLOT_NAME}.pid)
-  if kill $PID 2>/dev/null; then
-    while s=`ps -p $PID -o s=` && [[ "$s" && "$s" != 'Z' ]]; do
-      sleep 1
-    done
+  if kill -0 $PID; then
+    if kill $PID 2>/dev/null; then
+      while s=`ps -p $PID -o s=` && [[ "$s" && "$s" != 'Z' ]]; do
+        sleep 1
+      done
+    fi
   fi
 fi
 
@@ -47,7 +49,7 @@ INSTANCE_ENVIRONMENT_FILE=$INSTANCE_CONFIG_DIR/environment
 SLOT_ENVIRONMENT_FILE=$SLOT_DIR/environment
 
 if [[ ! -d $SLOT_DIR ]]; then
-  mkdir -p $SLOT_DIR 2>/dev/null
+  mkdir -p $SLOT_DIR 
 fi
 
 if [[ -s $INSTANCE_ENVIRONMENT_FILE ]]; then
@@ -65,6 +67,7 @@ if [[ -s $CONFIG_FILE ]]; then
   SERVICE_NAME=$(config_get $CONFIG_FILE "SERVICE_NAME")
   SERVICE_BINARY=$(config_get $CONFIG_FILE "SERVICE_BINARY")
   SERVICE_PARAMETERS=$(config_get $CONFIG_FILE "SERVICE_PARAMETERS")
+  DELAY_BEFORE=$(config_get $CONFIG_FILE "DELAY_BEFORE")
   if [[ "$SERVICE_NAME" != "__UNDEFINED__" ]]; then
     if [[ "x$SERVICE_NAME" != "x" ]]; then
       if [[ -e "$REPOSITORY_DIR/$SERVICE_BINARY" ]]; then
@@ -72,10 +75,24 @@ if [[ -s $CONFIG_FILE ]]; then
         if [[ "$SERVICE_PARAMETERS" == "__UNDEFINED__" ]]; then
           SERVICE_PARAMETERS=""
         fi
-        mkdir -p $HOME/$SLOT_NAME/logs
+        if [[ "$DELAY_BEFORE" == "__UNDEFINED__" ]]; then
+          DELAY_BEFORE="0"
+        fi
+        mkdir -p $HOME/$SLOT_NAME
         cp -f "$REPOSITORY_DIR/$SERVICE_BINARY" $HOME/$SLOT_NAME/service-$SLOT_NAME.jar
         cd $HOME/$SLOT_NAME
-        java $SERVICE_PARAMETERS -jar $HOME/$SLOT_NAME/service-$SLOT_NAME.jar 2>&1 >> $HOME/$SLOT_NAME/logs/${SERVICE_NAME}.log
+        if [[ $DELAY_BEFORE -gt 0 ]]; then
+          sleep $DELAY_BEFORE
+        fi
+        java $SERVICE_PARAMETERS -jar $HOME/$SLOT_NAME/service-$SLOT_NAME.jar &
+        RUN_PID=$!
+        echo $RUN_PID 1>&2
+        ps $RUN_PID 1>&2
+        inotifywait -r -t -1 -e create,delete,modify,close_write,move,attrib $SLOT_DIR
+        if kill -0 $RUN_PID; then
+          kill $RUN_PID
+        fi
+        exit 1
       fi
     fi
   fi
@@ -84,4 +101,5 @@ fi
 if [[ configured -eq 0 ]]; then
   echo "$SLOT_NAME: No service. Waiting for configuration ..."
   inotifywait -r -t -1 -e create,delete,modify,close_write,move,attrib $SLOT_DIR
+  exit 1
 fi
