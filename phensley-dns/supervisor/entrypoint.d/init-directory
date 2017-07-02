@@ -1,0 +1,11 @@
+#!/bin/bash
+echo "initializing linked directories ..."
+if [[ ! -d /data ]]; then
+  mkdir -p /data
+  chown -R nobody:nobody /data
+fi
+
+if [[ ! -d /data/dns ]]; then
+  mkdir -p /data/dns
+  chown -R nobody:nobody /data/dns
+fi

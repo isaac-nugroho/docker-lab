@@ -14,12 +14,13 @@
 # limitations under the License.
 #
 
-FROM        inugroho/base-image
+FROM        inugroho/base-image-jre
 
 MAINTAINER  isaac.nugroho@gmail.com
 
 USER        root
 RUN         apk --no-cache add \
+              openjdk8 \
               git \
               maven \
               nodejs \

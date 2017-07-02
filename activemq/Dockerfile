@@ -14,9 +14,11 @@
 # limitations under the License.
 #
 
-FROM        inugroho/base-image
+FROM        inugroho/base-image-jre
 
 MAINTAINER  isaac.nugroho@gmail.com
+
+USER        root
 
 ENV         ACTIVEMQ_VERSION 5.14.5
 ENV         ACTIVEMQ apache-activemq-$ACTIVEMQ_VERSION
@@ -39,3 +41,5 @@ EXPOSE      $ACTIVEMQ_TCP $ACTIVEMQ_AMQP $ACTIVEMQ_STOMP $ACTIVEMQ_MQTT $ACTIVEM
 ADD         supervisor/ /etc/
 
 USER        nobody
+ENV         HOME=/home/nobody
+ENV         USER=nobody

@@ -14,26 +14,18 @@
 # limitations under the License.
 #
 
-FROM        inugroho/base-image-jre
+FROM      inugroho/base-image
 
-MAINTAINER  isaac.nugroho@gmail.com
+USER      root
 
-USER        root
-ADD         supervisor/ /etc/
-ADD         run-service /usr/bin/
-ADD         resolve-dns /usr/bin/
-ADD         config.shlib /usr/bin/
+# /dev/urandom is used as random source, which is prefectly safe
+# according to http://www.2uo.de/myths-about-urandom/
+RUN       apk add --no-cache \
+            openjdk8-jre \
+          && echo "securerandom.source=file:/dev/urandom" >> /usr/lib/jvm/default-jvm/jre/lib/security/java.security
 
-RUN         chmod +x /usr/bin/resolve-dns /usr/bin/run-service \
-            && mkdir -p /home/nobody/.m2 \
-            && chown nobody:nobody /home/nobody/.m2
-
+ADD         java-home /etc/profile.d/
+#CMD         ["bash"]
 USER        nobody
 ENV         HOME=/home/nobody
 ENV         USER=nobody
-
-ENV         INSTANCE_NAME=instance-1
-
-VOLUME      /data
-
-EXPOSE      8180 8181 8182 8183 8184

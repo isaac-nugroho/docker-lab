@@ -26,13 +26,11 @@ RUN       apk add --update \
             sudo \
             openssh \
             bash \
-            openjdk8 \
             bzip2 \
             unzip \
             python2 \
             py2-pip \
             inotify-tools \
-          && echo "securerandom.source=file:/dev/urandom" >> /usr/lib/jvm/default-jvm/jre/lib/security/java.security \
           && pip install supervisor \
           && rm -rf /var/cache/apk/* /tmp/* \
           && sed -i -e "/^nobody/d" /etc/passwd \
@@ -48,10 +46,11 @@ RUN       apk add --update \
           && echo 'AllowUsers nobody' >> /etc/ssh/sshd_config \
           && ssh-keygen -h -b 4096 -f /etc/ssh/ssh_host_rsa_key -N "" \
           && mkdir -p /var/log/supervisor \
-          && touch /var/log/supervisor/supervisord.log
+          && touch /var/log/supervisor/supervisord.log \
+          && chown -R nobody:nobody /var/log/supervisor \
+          && chmod u=rwx,go=rx,a+s,u+s /var/log/supervisor 
 
 ADD         supervisor/ /etc/
-ADD         java-home /etc/profile.d/
 ADD         nobody/ /home/nobody/.ssh/
 ADD         authorized_keys /home/nobody/.ssh/
 
