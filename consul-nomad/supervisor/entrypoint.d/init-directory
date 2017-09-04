@@ -1,0 +1,24 @@
+#!/bin/bash
+echo "initializing linked directories ..."
+
+if [[ ! -d /consul ]]; then
+  mkdir -p /consul
+fi
+if [[ ! -d /consul/data ]]; then
+  mkdir -p /consul/data
+fi
+if [[ ! -d /consul/config ]]; then
+  mkdir -p /consul/config
+fi
+if [[ ! -d /nomad ]]; then
+  mkdir -p /nomad
+fi
+if [[ ! -d /nomad/data ]]; then
+  mkdir -p /nomad/data
+fi
+if [[ ! -d /nomad/config ]]; then
+  mkdir -p /nomad/config
+fi
+chown -R nobody:nobody /consul
+chown -R nobody:nobody /nomad
+chown nobody:nobody -R /home/nobody
