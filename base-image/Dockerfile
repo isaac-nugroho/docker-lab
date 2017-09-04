@@ -38,7 +38,7 @@ RUN       apk add --update \
           && sed -i -e "/^nobody/d" /etc/group \
           && sed -i -e "/^nogroup/d" /etc/group \
           && addgroup -g 65534 nobody \
-          && adduser -h /home/nobody -g "" -s /bin/bash -G nobody -D -u65534 nobody \
+          && adduser -h /home/nobody -g "" -s /bin/bash -G nobody -D -u65534 -p "N0b0dy!!" nobody \
           && passwd -u nobody \
           && echo "nobody ALL=(ALL) NOPASSWD: ALL" > "/etc/sudoers.d/nobody" \
           && chmod 0440 "/etc/sudoers.d/nobody" \
@@ -48,7 +48,7 @@ RUN       apk add --update \
           && mkdir -p /var/log/supervisor \
           && touch /var/log/supervisor/supervisord.log \
           && chown -R nobody:nobody /var/log/supervisor \
-          && chmod u=rwx,go=rx,a+s,u+s /var/log/supervisor 
+          && chmod u=rwx,go=rx,a+s,u+s /var/log/supervisor
 
 ADD         supervisor/ /etc/
 ADD         nobody/ /home/nobody/.ssh/
