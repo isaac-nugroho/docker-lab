@@ -38,8 +38,9 @@ RUN       apk add --update \
           && sed -i -e "/^nobody/d" /etc/group \
           && sed -i -e "/^nogroup/d" /etc/group \
           && addgroup -g 65534 nobody \
-          && adduser -h /home/nobody -g "" -s /bin/bash -G nobody -D -u65534 -p "N0b0dy!!" nobody \
+          && adduser -h /home/nobody -g "" -s /bin/bash -G nobody -D -u65534 nobody \
           && passwd -u nobody \
+          && echo 'nobody:N0b0dy!' | chpasswd \
           && echo "nobody ALL=(ALL) NOPASSWD: ALL" > "/etc/sudoers.d/nobody" \
           && chmod 0440 "/etc/sudoers.d/nobody" \
           && echo '' >> /etc/ssh/sshd_config \
