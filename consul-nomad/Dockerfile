@@ -34,6 +34,13 @@ RUN         apk add --no-cache ca-certificates gnupg libcap openssl libc6-compat
             && gpg --keyserver pgp.mit.edu --recv-keys 91A6E7F85D05C65630BEF18951852D87348FFC4C \
             && mkdir -p /tmp/build \
             && cd /tmp/build \
+            && wget ${HASHICORP_RELEASES}/docker-base/${DOCKER_BASE_VERSION}/docker-base_${DOCKER_BASE_VERSION}_linux_amd64.zip \
+            && wget ${HASHICORP_RELEASES}/docker-base/${DOCKER_BASE_VERSION}/docker-base_${DOCKER_BASE_VERSION}_SHA256SUMS \
+            && wget ${HASHICORP_RELEASES}/docker-base/${DOCKER_BASE_VERSION}/docker-base_${DOCKER_BASE_VERSION}_SHA256SUMS.sig \
+            && gpg --batch --verify docker-base_${DOCKER_BASE_VERSION}_SHA256SUMS.sig docker-base_${DOCKER_BASE_VERSION}_SHA256SUMS \
+            && grep ${DOCKER_BASE_VERSION}_linux_amd64.zip docker-base_${DOCKER_BASE_VERSION}_SHA256SUMS | sha256sum -c \
+            && unzip docker-base_${DOCKER_BASE_VERSION}_linux_amd64.zip \
+            && cp bin/gosu bin/dumb-init /bin \
             && wget ${HASHICORP_RELEASES}/consul/${CONSUL_VERSION}/consul_${CONSUL_VERSION}_linux_amd64.zip \
             && wget ${HASHICORP_RELEASES}/consul/${CONSUL_VERSION}/consul_${CONSUL_VERSION}_SHA256SUMS \
             && wget ${HASHICORP_RELEASES}/consul/${CONSUL_VERSION}/consul_${CONSUL_VERSION}_SHA256SUMS.sig \
@@ -60,6 +67,23 @@ RUN         apk add --no-cache ca-certificates gnupg libcap openssl libc6-compat
 EXPOSE      8300 8301 8301/udp 8302 8302/udp 8500 8600 8600/udp 4646 4647 4648
 
 ADD         supervisor/ /etc/
+ADD         00-consul-boot.json /consul/config/
+ADD         00-nomad-boot.json /nomad/config/
+ADD         run-consul.sh /
+ADD         run-nomad.sh /
+
+ENV         CONSUL_DATA_DIR=/consul/data
+ENV         CONSUL_CONFIG_DIR=/consul/config
+#ENV         CONSUL_BIND_INTERFACE
+#ENV         CONSUL_CLIENT_INTERFACE
+#ENV         CONSUL_LOCAL_CONFIG
+
+ENV         NOMAD_DATA_DIR=/nomad/data
+ENV         NOMAD_CONFIG_DIR=/nomad/config
+#ENV         NOMAD_BIND_INTERFACE
+#ENV         NOMAD_CLIENT_INTERFACE
+#ENV         NOMAD_LOCAL_CONFIG
+
 
 USER        nobody
 ENV         HOME=/home/nobody
