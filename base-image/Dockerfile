@@ -55,7 +55,7 @@ ADD         supervisor/ /etc/
 ADD         nobody/ /home/nobody/.ssh/
 ADD         authorized_keys /home/nobody/.ssh/
 
-EXPOSE      22
+EXPOSE      62435
 
 CMD         ["/usr/bin/sudo", "-E", "/usr/bin/supervisord", "--configuration=/etc/supervisord.conf"]
 #CMD         ["bash"]

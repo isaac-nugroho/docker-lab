@@ -1,24 +1,27 @@
 #!/bin/bash
 echo "initializing linked directories ..."
 
-if [[ ! -d /consul ]]; then
-  mkdir -p /consul
+if [[ ! -d /data/dns ]]; then
+  mkdir -p /data/dns
+  chown -R nobody:nobody /data/dns
 fi
-if [[ ! -d /consul/data ]]; then
-  mkdir -p /consul/data
+
+if [[ ! -d $CONSUL_CONFIG_DIR ]]; then
+  mkdir -p $CONSUL_CONFIG_DIR
+  chown -R nobody:nobody $CONSUL_CONFIG_DIR
 fi
-if [[ ! -d /consul/config ]]; then
-  mkdir -p /consul/config
+
+if [[ ! -d $CONSUL_DATA_DIR ]]; then
+  mkdir -p $CONSUL_DATA_DIR
+  chown -R nobody:nobody $CONSUL_DATA_DIR
 fi
-if [[ ! -d /nomad ]]; then
-  mkdir -p /nomad
+
+if [[ ! -d $NOMAD_CONFIG_DIR ]]; then
+  mkdir -p $NOMAD_CONFIG_DIR
+  chown -R nobody:nobody $NOMAD_CONFIG_DIR
 fi
-if [[ ! -d /nomad/data ]]; then
-  mkdir -p /nomad/data
+
+if [[ ! -d $NOMAD_DATA_DIR ]]; then
+  mkdir -p $NOMAD_DATA_DIR
+  chown -R nobody:nobody $NOMAD_DATA_DIR
 fi
-if [[ ! -d /nomad/config ]]; then
-  mkdir -p /nomad/config
-fi
-chown -R nobody:nobody /consul
-chown -R nobody:nobody /nomad
-chown nobody:nobody -R /home/nobody

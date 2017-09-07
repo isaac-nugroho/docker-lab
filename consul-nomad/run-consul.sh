@@ -36,22 +36,21 @@ if [ -n "$CONSUL_CLIENT_INTERFACE" ]; then
   echo "==> Found address '$CONSUL_CLIENT_ADDRESS' for interface '$CONSUL_CLIENT_INTERFACE', setting client option..."
 fi
 
-# CONSUL_DATA_DIR is exposed as a volume for possible persistent storage. The
-# CONSUL_CONFIG_DIR isn't exposed as a volume but you can compose additional
-# config files in there if you use this image as a base, or use CONSUL_LOCAL_CONFIG
-# below.
-CONSUL_DATA_DIR=${CONSUL_DATA_DIR:-/consul/data}
-CONSUL_CONFIG_DIR=${CONSUL_CONFIG_DIR:-/consul/config}
-
 # You can also set the CONSUL_LOCAL_CONFIG environemnt variable to pass some
 # Consul configuration JSON without having to bind any volumes.
 if [ -n "$CONSUL_LOCAL_CONFIG" ]; then
 	echo "$CONSUL_LOCAL_CONFIG" > "$CONSUL_CONFIG_DIR/local.json"
 fi
 
-CONSUL_ADVERTISE_PARAM=
-if [ ! -z ${CONSUL_ADVERTISE+x} ]; then
-  CONSUL_ADVERTISE_PARAM="-server -advertise=$CONSUL_BIND_ADDRESS -retry-join=$CONSUL_BIND_ADDRESS "
+CONSUL_SERVER_PARAM=
+if [ -n ${CONSUL_SEEDER} ]; then
+  CONSUL_SERVER_PARAM="-server -client=0.0.0.0 -advertise=$CONSUL_BIND_ADDRESS "
+elif [ -n ${CONSUL_SERVER} ]; then
+  CONSUL_SERVER_PARAM="-server -client=0.0.0.0 -retry-join=$CONSUL_SERVER "
+fi
+
+if [ -n ${CONSUL_UI} ]; then
+  CONSUL_UI="-ui "
 fi
 
 # If the user is trying to run Consul directly with some arguments, then
@@ -64,10 +63,11 @@ fi
 if [ "$1" = 'agent' ]; then
   shift
   set -- consul agent \
+      $CONSUL_UI \
       -data-dir="$CONSUL_DATA_DIR" \
       -config-dir="$CONSUL_CONFIG_DIR" \
       $CONSUL_BIND \
-      $CONSUL_ADVERTISE_PARAM \
+      $CONSUL_SERVER_PARAM \
       $CONSUL_CLIENT \
       "$@"
 elif [ "$1" = 'version' ]; then
@@ -81,11 +81,11 @@ fi
 
 # If the data or config dirs are bind mounted then chown them.
 # Note: This checks for root ownership as that's the most common case.
-if [ "$(stat -c %u /consul/data)" != "$(id -u nobody)" ]; then
-  chown nobody:nobody -R /consul/data
+if [ "$(stat -c %u $CONSUL_DATA_DIR)" != "$(id -u nobody)" ]; then
+  chown nobody:nobody -R $CONSUL_DATA_DIR
 fi
-if [ "$(stat -c %u /consul/config)" != "$(id -u nobody)" ]; then
-  chown nobody:nobody -R /consul/config
+if [ "$(stat -c %u $CONSUL_CONFIG_DIR)" != "$(id -u nobody)" ]; then
+  chown nobody:nobody -R $CONSUL_CONFIG_DIR
 fi
 
 # If requested, set the capability to bind to privileged ports before

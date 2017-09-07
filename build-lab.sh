@@ -1,12 +1,7 @@
 #!/bin/bash
 PARENT=$(pwd)
 echo "Cleaning up ..."
-docker rmi inugroho/base-image
-docker rmi inugroho/base-image-jre
-docker rmi inugroho/phensley-dns
-docker rmi inugroho/activemq
-docker rmi inugroho/builder
-docker rmi inugroho/microservice-base
+docker images prune
 
 echo "base-image"
 cd $PARENT/base-image
@@ -38,4 +33,11 @@ cd $PARENT/microservice-base
 docker build . -t inugroho/microservice-base
 docker push inugroho/microservice-base
 
+echo "consul-nomad"
+cd $PARENT/consul-nomad
+docker build . -t inugroho/consul-nomad
+docker push inugroho/consul-nomad
 cd $PARENT
+
+echo "Cleaning up ..."
+docker images prune

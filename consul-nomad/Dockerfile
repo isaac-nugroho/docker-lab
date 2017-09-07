@@ -63,23 +63,27 @@ RUN         apk add --no-cache ca-certificates gnupg libcap openssl libc6-compat
             && mkdir -p /nomad/config \
             && chown -R nobody:nobody /consul
 
-
 EXPOSE      8300 8301 8301/udp 8302 8302/udp 8500 8600 8600/udp 4646 4647 4648
 
 ADD         supervisor/ /etc/
-ADD         00-consul-boot.json /consul/config/
-ADD         00-nomad-boot.json /nomad/config/
 ADD         run-consul.sh /
 ADD         run-nomad.sh /
+ADD         resolve-dns /usr/bin/
+VOLUME      /data
+VOLUME      /config
 
-ENV         CONSUL_DATA_DIR=/consul/data
-ENV         CONSUL_CONFIG_DIR=/consul/config
+ENV         CONSUL_DATA_DIR=/cluster/consul
+ENV         NOMAD_DATA_DIR=/cluster/nomad
+
+ENV         CONSUL_CONFIG_DIR=/config/consul
+ENV         NOMAD_CONFIG_DIR=/config/nomad
+
+ADD         00-consul-boot.json ${CONSUL_CONFIG_DIR}/
+ADD         00-nomad-boot.json ${NOMAD_CONFIG_DIR}/
 #ENV         CONSUL_BIND_INTERFACE
 #ENV         CONSUL_CLIENT_INTERFACE
 #ENV         CONSUL_LOCAL_CONFIG
 
-ENV         NOMAD_DATA_DIR=/nomad/data
-ENV         NOMAD_CONFIG_DIR=/nomad/config
 #ENV         NOMAD_BIND_INTERFACE
 #ENV         NOMAD_CLIENT_INTERFACE
 #ENV         NOMAD_LOCAL_CONFIG
