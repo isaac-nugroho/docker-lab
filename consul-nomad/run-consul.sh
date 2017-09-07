@@ -44,9 +44,9 @@ fi
 
 CONSUL_SERVER_PARAM=
 if [ -n ${CONSUL_SEEDER} ]; then
-  CONSUL_SERVER_PARAM="-server -client=0.0.0.0 -advertise=$CONSUL_BIND_ADDRESS "
-elif [ -n ${CONSUL_SERVER} ]; then
-  CONSUL_SERVER_PARAM="-server -client=0.0.0.0 -retry-join=$CONSUL_SERVER "
+  CONSUL_SERVER_PARAM="-server -client 0.0.0.0 "
+elif [ -n ${CONSUL_JOIN} ]; then
+  CONSUL_SERVER_PARAM="-server -client 0.0.0.0 -retry-join $CONSUL_SERVER "
 fi
 
 if [ -n ${CONSUL_UI} ]; then
