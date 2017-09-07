@@ -42,11 +42,9 @@ if [ -n "$CONSUL_LOCAL_CONFIG" ]; then
 	echo "$CONSUL_LOCAL_CONFIG" > "$CONSUL_CONFIG_DIR/local.json"
 fi
 
-CONSUL_SERVER_PARAM=
-if [ -n ${CONSUL_SEEDER} ]; then
-  CONSUL_SERVER_PARAM="-server -client 0.0.0.0 "
-elif [ -n ${CONSUL_JOIN} ]; then
-  CONSUL_SERVER_PARAM="-server -client 0.0.0.0 -retry-join $CONSUL_SERVER "
+CONSUL_JOIN_PARAM=
+if [ -n ${CONSUL_JOIN} ]; then
+  CONSUL_JOIN_PARAM="-retry-join $CONSUL_JOIN"
 fi
 
 if [ -n ${CONSUL_UI} ]; then
@@ -64,10 +62,12 @@ if [ "$1" = 'agent' ]; then
   shift
   set -- consul agent \
       $CONSUL_UI \
+      -raft-protocol=3 \
+      -protocol=3 \
       -data-dir="$CONSUL_DATA_DIR" \
       -config-dir="$CONSUL_CONFIG_DIR" \
       $CONSUL_BIND \
-      $CONSUL_SERVER_PARAM \
+      $CONSUL_JOIN_PARAM \
       $CONSUL_CLIENT \
       "$@"
 elif [ "$1" = 'version' ]; then

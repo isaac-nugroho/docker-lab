@@ -34,6 +34,4 @@ ENV         USER=nobody
 
 ENV         INSTANCE_NAME=instance-1
 
-VOLUME      /data
-
 EXPOSE      8180 8181 8182 8183 8184
