@@ -69,8 +69,6 @@ ADD         supervisor/ /etc/
 ADD         run-consul.sh /
 ADD         run-nomad.sh /
 ADD         resolve-dns /usr/bin/
-VOLUME      /data
-VOLUME      /config
 
 ENV         CONSUL_DATA_DIR=/cluster/consul
 ENV         NOMAD_DATA_DIR=/cluster/nomad
