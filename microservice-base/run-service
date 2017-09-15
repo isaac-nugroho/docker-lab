@@ -39,7 +39,6 @@ fi
 
 echo $$ > /tmp/${SLOT_NAME}.pid
 
-REPOSITORY_DIR=/data/repository
 INSTANCE_CONFIG_DIR=/data/instance-config/$INSTANCE_NAME
 
 SLOT_DIR=$INSTANCE_CONFIG_DIR/$SLOT_NAME
@@ -47,9 +46,8 @@ CONFIG_FILE=$SLOT_DIR/config
 
 INSTANCE_ENVIRONMENT_FILE=$INSTANCE_CONFIG_DIR/environment
 SLOT_ENVIRONMENT_FILE=$SLOT_DIR/environment
-
 if [[ ! -d $SLOT_DIR ]]; then
-  mkdir -p $SLOT_DIR 
+  mkdir -p $SLOT_DIR
 fi
 
 if [[ -s $INSTANCE_ENVIRONMENT_FILE ]]; then
@@ -69,8 +67,9 @@ if [[ -s $CONFIG_FILE ]]; then
   SERVICE_PARAMETERS=$(config_get $CONFIG_FILE "SERVICE_PARAMETERS")
   DELAY_BEFORE=$(config_get $CONFIG_FILE "DELAY_BEFORE")
   if [[ "$SERVICE_NAME" != "__UNDEFINED__" ]]; then
+    mkdir -p $HOME/$SLOT_NAME
     if [[ "x$SERVICE_NAME" != "x" ]]; then
-      if [[ -e "$REPOSITORY_DIR/$SERVICE_BINARY" ]]; then
+      if curl "$SERVICE_BINARY" -o $HOME/$SLOT_NAME/service-$SLOT_NAME.jar; then
         configured=1
         if [[ "$SERVICE_PARAMETERS" == "__UNDEFINED__" ]]; then
           SERVICE_PARAMETERS=""
@@ -78,8 +77,7 @@ if [[ -s $CONFIG_FILE ]]; then
         if [[ "$DELAY_BEFORE" == "__UNDEFINED__" ]]; then
           DELAY_BEFORE="0"
         fi
-        mkdir -p $HOME/$SLOT_NAME
-        cp -f "$REPOSITORY_DIR/$SERVICE_BINARY" $HOME/$SLOT_NAME/service-$SLOT_NAME.jar
+
         cd $HOME/$SLOT_NAME
         if [[ $DELAY_BEFORE -gt 0 ]]; then
           sleep $DELAY_BEFORE

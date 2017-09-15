@@ -14,21 +14,18 @@
 # limitations under the License.
 #
 
-FROM        inugroho/consul-oraclejdk8
-
-MAINTAINER  isaac.nugroho@gmail.com
+FROM        inugroho/base-consul
 
 USER        root
-ADD         supervisor/ /etc/
-ADD         run-service /usr/bin/
-ADD         config.shlib /usr/bin/
 
-RUN         chmod +x /usr/bin/run-service
+# /dev/urandom is used as random source, which is prefectly safe
+# according to http://www.2uo.de/myths-about-urandom/
+RUN         apk add --no-cache \
+              openjdk8-jre \
+            && echo "securerandom.source=file:/dev/urandom" >> /usr/lib/jvm/default-jvm/jre/lib/security/java.security
 
+ADD         java-home /etc/profile.d/
+#CMD         ["bash"]
 USER        nobody
 ENV         HOME=/home/nobody
 ENV         USER=nobody
-
-ENV         INSTANCE_NAME=instance-1
-
-EXPOSE      8180 8181 8182 8183 8184

@@ -13,10 +13,27 @@ cd $PARENT/base-image-jre
 docker build . -t inugroho/base-image-jre
 docker push inugroho/base-image-jre
 
-echo "phensley-dns"
+echo "base-consul"
 cd $PARENT/phensley-dns
 docker build . -t inugroho/phensley-dns
 docker push inugroho/phensley-dns
+
+echo "base-consul-jre"
+cd $PARENT/phensley-dns
+docker build . -t inugroho/phensley-dns
+docker push inugroho/phensley-dns
+
+echo "consul-cassandra"
+cd $PARENT/consul-cassandra
+docker build . -t inugroho/consul-cassandra
+docker push inugroho/consul-cassandra
+cd $PARENT
+
+echo "consul-nomad"
+cd $PARENT/consul-nomad
+docker build . -t inugroho/consul-nomad
+docker push inugroho/consul-nomad
+cd $PARENT
 
 echo "activemq"
 cd $PARENT/activemq
@@ -32,12 +49,6 @@ echo "microservice-base"
 cd $PARENT/microservice-base
 docker build . -t inugroho/microservice-base
 docker push inugroho/microservice-base
-
-echo "consul-nomad"
-cd $PARENT/consul-nomad
-docker build . -t inugroho/consul-nomad
-docker push inugroho/consul-nomad
-cd $PARENT
 
 echo "Cleaning up ..."
 docker images prune

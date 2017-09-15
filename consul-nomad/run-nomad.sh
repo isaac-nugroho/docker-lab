@@ -9,6 +9,25 @@ set -e
 # You can set NOMAD_BIND_INTERFACE to the name of the interface you'd like to
 # bind to and this will look up the IP and pass the proper -bind= option along
 # to Nomad.
+# If the data or config dirs are bind mounted then chown them.
+# Note: This checks for root ownership as that's the most common case.
+if [[ ! -d $NOMAD_DATA_DIR ]]; then
+  mkdir -p $NOMAD_DATA_DIR
+  chown -R nobody:nobody $NOMAD_DATA_DIR
+fi
+
+if [[ ! -d $NOMAD_CONFIG_DIR ]]; then
+  mkdir -p $NOMAD_CONFIG_DIR
+  chown -R nobody:nobody $NOMAD_CONFIG_DIR
+fi
+
+if [ "$(stat -c %u $NOMAD_DATA_DIR)" != "$(id -u nobody)" ]; then
+  chown nobody:nobody -R $NOMAD_DATA_DIR
+fi
+if [ "$(stat -c %u $NOMAD_CONFIG_DIR)" != "$(id -u nobody)" ]; then
+  chown nobody:nobody -R $NOMAD_CONFIG_DIR
+fi
+
 NOMAD_BIND=
 if [ -n "$NOMAD_BIND_INTERFACE" ]; then
   NOMAD_BIND_ADDRESS=$(ip -o -4 addr list $NOMAD_BIND_INTERFACE | head -n1 | awk '{print $4}' | cut -d/ -f1)
@@ -21,6 +40,13 @@ if [ -n "$NOMAD_BIND_INTERFACE" ]; then
   echo "==> Found address '$NOMAD_BIND_ADDRESS' for interface '$NOMAD_BIND_INTERFACE', setting bind option..."
 fi
 
+if [ ! -z "$CONSUL_CLIENT_INTERFACE" ]; then
+  CONSUL_CLIENT_ADDRESS=$(ip -o -4 addr list $CONSUL_CLIENT_INTERFACE | head -n1 | awk '{print $4}' | cut -d/ -f1)
+fi
+
+if [ ! -z "$CONSUL_CLIENT_ADDRESS" -a ! "$CONSUL_CLIENT_ADDRESS" = "0.0.0.0" ]; then
+  echo "{ \"consul\": { \"address\": \"$CONSUL_CLIENT_ADDRESS:8500\" }}" > "$NOMAD_CONFIG_DIR/consul.json"
+fi
 # You can also set the NOMAD_LOCAL_CONFIG environemnt variable to pass some
 # Nomad configuration JSON without having to bind any volumes.
 if [ -n "$NOMAD_LOCAL_CONFIG" ]; then
@@ -50,15 +76,14 @@ elif nomad --help "$1" 2>&1 | grep -q "nomad $1"; then
   set -- nomad "$@"
 fi
 
-# If the data or config dirs are bind mounted then chown them.
-# Note: This checks for root ownership as that's the most common case.
-if [ "$(stat -c %u $NOMAD_DATA_DIR)" != "$(id -u nobody)" ]; then
-  chown nobody:nobody -R $NOMAD_DATA_DIR
-fi
-if [ "$(stat -c %u $NOMAD_CONFIG_DIR)" != "$(id -u nobody)" ]; then
-  chown nobody:nobody -R $NOMAD_CONFIG_DIR
+if [[ ! -d $NOMAD_CONFIG_DIR ]]; then
+  mkdir -p $NOMAD_CONFIG_DIR
+  chown -R nobody:nobody $NOMAD_CONFIG_DIR
 fi
 
-set -- gosu nobody "$@"
+if [[ ! -d $NOMAD_DATA_DIR ]]; then
+  mkdir -p $NOMAD_DATA_DIR
+  chown -R nobody:nobody $NOMAD_DATA_DIR
+fi
 
 exec "$@"

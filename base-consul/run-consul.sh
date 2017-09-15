@@ -1,4 +1,4 @@
-#!/bin/dumb-init /bin/sh
+#!/bin/dumb-init /bin/bash
 set -e
 
 # Note above that we run dumb-init as PID 1 in order to reap zombie processes
@@ -9,8 +9,28 @@ set -e
 # You can set CONSUL_BIND_INTERFACE to the name of the interface you'd like to
 # bind to and this will look up the IP and pass the proper -bind= option along
 # to Consul.
+
+if [[ ! -d $CONSUL_CONFIG_DIR ]]; then
+  mkdir -p $CONSUL_CONFIG_DIR
+  chown -R nobody:nobody $CONSUL_CONFIG_DIR
+fi
+
+if [[ ! -d $CONSUL_DATA_DIR ]]; then
+  mkdir -p $CONSUL_DATA_DIR
+  chown -R nobody:nobody $CONSUL_DATA_DIR
+fi
+
+# If the data or config dirs are bind mounted then chown them.
+# Note: This checks for root ownership as that's the most common case.
+if [ "$(stat -c %u $CONSUL_DATA_DIR)" != "$(id -u nobody)" ]; then
+  chown nobody:nobody -R $CONSUL_DATA_DIR
+fi
+if [ "$(stat -c %u $CONSUL_CONFIG_DIR)" != "$(id -u nobody)" ]; then
+  chown nobody:nobody -R $CONSUL_CONFIG_DIR
+fi
+
 CONSUL_BIND=
-if [ -n "$CONSUL_BIND_INTERFACE" ]; then
+if [ ! -z "$CONSUL_BIND_INTERFACE" ]; then
   CONSUL_BIND_ADDRESS=$(ip -o -4 addr list $CONSUL_BIND_INTERFACE | head -n1 | awk '{print $4}' | cut -d/ -f1)
   if [ -z "$CONSUL_BIND_ADDRESS" ]; then
     echo "Could not find IP for interface '$CONSUL_BIND_INTERFACE', exiting"
@@ -25,7 +45,7 @@ fi
 # bind client intefaces (HTTP, DNS, and RPC) to and this will look up the IP and
 # pass the proper -client= option along to Consul.
 CONSUL_CLIENT=
-if [ -n "$CONSUL_CLIENT_INTERFACE" ]; then
+if [ ! -z "$CONSUL_CLIENT_INTERFACE" ]; then
   CONSUL_CLIENT_ADDRESS=$(ip -o -4 addr list $CONSUL_CLIENT_INTERFACE | head -n1 | awk '{print $4}' | cut -d/ -f1)
   if [ -z "$CONSUL_CLIENT_ADDRESS" ]; then
     echo "Could not find IP for interface '$CONSUL_CLIENT_INTERFACE', exiting"
@@ -34,20 +54,22 @@ if [ -n "$CONSUL_CLIENT_INTERFACE" ]; then
 
   CONSUL_CLIENT="-client=$CONSUL_CLIENT_ADDRESS"
   echo "==> Found address '$CONSUL_CLIENT_ADDRESS' for interface '$CONSUL_CLIENT_INTERFACE', setting client option..."
+elif [ ! -z "$CONSUL_CLIENT_ADDRESS" ]; then
+  CONSUL_CLIENT="-client=$CONSUL_CLIENT_ADDRESS"
 fi
 
 # You can also set the CONSUL_LOCAL_CONFIG environemnt variable to pass some
 # Consul configuration JSON without having to bind any volumes.
-if [ -n "$CONSUL_LOCAL_CONFIG" ]; then
+if [ ! -z "$CONSUL_LOCAL_CONFIG" ]; then
 	echo "$CONSUL_LOCAL_CONFIG" > "$CONSUL_CONFIG_DIR/local.json"
 fi
 
 CONSUL_JOIN_PARAM=
-if [ -n ${CONSUL_JOIN} ]; then
+if [ ! -z ${CONSUL_JOIN} ]; then
   CONSUL_JOIN_PARAM="-retry-join $CONSUL_JOIN"
 fi
 
-if [ -n ${CONSUL_UI} ]; then
+if [ ! -z ${CONSUL_UI} ]; then
   CONSUL_UI="-ui "
 fi
 
@@ -79,15 +101,6 @@ elif consul --help "$1" 2>&1 | grep -q "consul $1"; then
   set -- consul "$@"
 fi
 
-# If the data or config dirs are bind mounted then chown them.
-# Note: This checks for root ownership as that's the most common case.
-if [ "$(stat -c %u $CONSUL_DATA_DIR)" != "$(id -u nobody)" ]; then
-  chown nobody:nobody -R $CONSUL_DATA_DIR
-fi
-if [ "$(stat -c %u $CONSUL_CONFIG_DIR)" != "$(id -u nobody)" ]; then
-  chown nobody:nobody -R $CONSUL_CONFIG_DIR
-fi
-
 # If requested, set the capability to bind to privileged ports before
 # we drop to the non-root user. Note that this doesn't work with all
 # storage drivers (it won't work with AUFS).
@@ -96,5 +109,4 @@ if [ ! -z ${CONSUL_ALLOW_PRIVILEGED_PORTS+x} ]; then
 fi
 
 set -- gosu nobody "$@"
-
 exec "$@"

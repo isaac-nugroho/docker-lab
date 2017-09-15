@@ -14,21 +14,24 @@
 # limitations under the License.
 #
 
-FROM        inugroho/consul-oraclejdk8
-
-MAINTAINER  isaac.nugroho@gmail.com
+FROM        inugroho/base-consul
 
 USER        root
-ADD         supervisor/ /etc/
-ADD         run-service /usr/bin/
-ADD         config.shlib /usr/bin/
 
-RUN         chmod +x /usr/bin/run-service
+ADD         login.cnf /etc/
+
+ENV         MARIADB_ROOT_PASSWORD=CHANGE_THIS_DEFAULT_PASSWORD
+
+ENV         MARIADB_DATA=/var/lib/mariadb
+
+RUN         apk add --no-cache \
+              mariadb \
+              mariadb-client
+
+ADD         supervisor/ /etc/
+ADD         run-mariadb.sh /
+RUN         chmod +x /run-mariadb.sh
 
 USER        nobody
 ENV         HOME=/home/nobody
 ENV         USER=nobody
-
-ENV         INSTANCE_NAME=instance-1
-
-EXPOSE      8180 8181 8182 8183 8184

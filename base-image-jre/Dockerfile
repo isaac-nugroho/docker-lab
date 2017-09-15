@@ -14,15 +14,15 @@
 # limitations under the License.
 #
 
-FROM      inugroho/base-image
+FROM        inugroho/base-image
 
-USER      root
+USER        root
 
 # /dev/urandom is used as random source, which is prefectly safe
 # according to http://www.2uo.de/myths-about-urandom/
-RUN       apk add --no-cache \
-            openjdk8-jre \
-          && echo "securerandom.source=file:/dev/urandom" >> /usr/lib/jvm/default-jvm/jre/lib/security/java.security
+RUN         apk add --no-cache \
+              openjdk8-jre \
+            && echo "securerandom.source=file:/dev/urandom" >> /usr/lib/jvm/default-jvm/jre/lib/security/java.security
 
 ADD         java-home /etc/profile.d/
 #CMD         ["bash"]
