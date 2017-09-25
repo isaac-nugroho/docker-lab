@@ -18,26 +18,33 @@ FROM        alpine:3.6
 
 USER        root
 
-# /dev/urandom is used as random source, which is prefectly safe
-# according to http://www.2uo.de/myths-about-urandom/
+#hashicorp docker-base
+ENV         DOCKER_BASE_VERSION=0.0.4
+
 RUN         ALPINE_GLIBC_BASE_URL="https://github.com/sgerrand/alpine-pkg-glibc/releases/download" \
             && ALPINE_GLIBC_PACKAGE_VERSION="2.25-r0" \
             && ALPINE_GLIBC_BASE_PACKAGE_FILENAME="glibc-$ALPINE_GLIBC_PACKAGE_VERSION.apk" \
             && ALPINE_GLIBC_BIN_PACKAGE_FILENAME="glibc-bin-$ALPINE_GLIBC_PACKAGE_VERSION.apk" \
             && ALPINE_GLIBC_I18N_PACKAGE_FILENAME="glibc-i18n-$ALPINE_GLIBC_PACKAGE_VERSION.apk" \
+            && HASHICORP_RELEASES="https://releases.hashicorp.com" \
             && apk add --update --no-cache \
-              curl \
-              wget \
-              sudo \
-              openssh \
-              bash \
-              bzip2 \
-              unzip \
-              python \
-              py-pip \
-              ca-certificates \
-              inotify-tools \
-              libpcap \
+                curl \
+                wget \
+                openssh \
+                bash \
+                sudo \
+                bzip2 \
+                unzip \
+                python \
+                py-pip \
+                ca-certificates \
+                inotify-tools \
+                libpcap \
+                coreutils \
+            && apk add --no-cache --virtual build-dependencies gnupg openssl \
+            && gpg --keyserver pgp.mit.edu --recv-keys 91A6E7F85D05C65630BEF18951852D87348FFC4C \
+            && mkdir -p /tmp/build \
+            && cd /tmp/build \
             && wget \
                 "https://raw.githubusercontent.com/andyshinn/alpine-pkg-glibc/master/sgerrand.rsa.pub" \
                 -O "/etc/apk/keys/sgerrand.rsa.pub" \
@@ -54,11 +61,15 @@ RUN         ALPINE_GLIBC_BASE_URL="https://github.com/sgerrand/alpine-pkg-glibc/
             && echo "export LANG=C.UTF-8" > /etc/profile.d/locale.sh \
             && apk del glibc-i18n \
             && rm "/root/.wget-hsts" \
-            && rm \
-                    "$ALPINE_GLIBC_BASE_PACKAGE_FILENAME" \
-                    "$ALPINE_GLIBC_BIN_PACKAGE_FILENAME" \
-                    "$ALPINE_GLIBC_I18N_PACKAGE_FILENAME" \
+            && wget ${HASHICORP_RELEASES}/docker-base/${DOCKER_BASE_VERSION}/docker-base_${DOCKER_BASE_VERSION}_linux_amd64.zip \
+            && wget ${HASHICORP_RELEASES}/docker-base/${DOCKER_BASE_VERSION}/docker-base_${DOCKER_BASE_VERSION}_SHA256SUMS \
+            && wget ${HASHICORP_RELEASES}/docker-base/${DOCKER_BASE_VERSION}/docker-base_${DOCKER_BASE_VERSION}_SHA256SUMS.sig \
+            && gpg --batch --verify docker-base_${DOCKER_BASE_VERSION}_SHA256SUMS.sig docker-base_${DOCKER_BASE_VERSION}_SHA256SUMS \
+            && grep ${DOCKER_BASE_VERSION}_linux_amd64.zip docker-base_${DOCKER_BASE_VERSION}_SHA256SUMS | sha256sum -c \
+            && unzip docker-base_${DOCKER_BASE_VERSION}_linux_amd64.zip \
+            && cp bin/gosu bin/dumb-init /bin \
             && pip install supervisor \
+            && apk del build-dependencies \
             && rm -rf /var/cache/apk/* /tmp/* \
             && sed -i -e "/^nobody/d" /etc/passwd \
             && sed -i -e "/^nobody/d" /etc/shadow \
@@ -67,24 +78,25 @@ RUN         ALPINE_GLIBC_BASE_URL="https://github.com/sgerrand/alpine-pkg-glibc/
             && addgroup -g 65534 nobody \
             && adduser -h /home/nobody -g "" -s /bin/bash -G nobody -D -u65534 nobody \
             && passwd -u nobody \
-            && echo 'nobody:N0b0dy!' | chpasswd \
+            && echo 'nobody:Horse-staple-bridge1' | chpasswd \
             && echo "nobody ALL=(ALL) NOPASSWD: ALL" > "/etc/sudoers.d/nobody" \
             && chmod 0440 "/etc/sudoers.d/nobody" \
             && echo '' >> /etc/ssh/sshd_config \
             && echo 'AllowUsers nobody' >> /etc/ssh/sshd_config \
             && ssh-keygen -h -b 4096 -f /etc/ssh/ssh_host_rsa_key -N "" \
-            && mkdir -p /var/log/supervisor \
-            && touch /var/log/supervisor/supervisord.log \
-            && chown -R nobody:nobody /var/log/supervisor \
-            && chmod u=rwx,go=rx,a+s,u+s /var/log/supervisor
+            && mkdir -p /home/nobody/.ssh \
+            && chown -R nobody:nobody /home/nobody \
+            && chmod 700 -R /home/nobody/.ssh
 
 ENV         LANG=C.UTF-8
 
 ADD         supervisor/ /etc/
-ADD         nobody/ /home/nobody/.ssh/
-ADD         authorized_keys /home/nobody/.ssh/
+
+COPY        nobody/* /home/nobody/.ssh/
+
+RUN         chmod 600 /home/nobody/.ssh/id_rsa /home/nobody/.ssh/authorized_keys \
+            && chown nobody:nobody /home/nobody/.ssh/*
 
 EXPOSE      62435
 
-CMD         ["/usr/bin/sudo", "-E", "/usr/bin/supervisord", "--configuration=/etc/supervisord.conf"]
-#CMD         ["bash"]
+CMD         ["sudo", "/usr/bin/supervisord", "--configuration=/etc/supervisord.conf"]

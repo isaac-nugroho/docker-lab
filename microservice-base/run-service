@@ -23,8 +23,6 @@ function finish {
 trap finish EXIT
 
 SLOT_NAME=$1
-echo $INSTANCE_NAME $SLOT_NAME
-
 # kill previous instance
 if [[ -s /tmp/$SLOT_NAME.pid ]]; then
   PID=$(cat /tmp/${SLOT_NAME}.pid)
@@ -39,10 +37,12 @@ fi
 
 echo $$ > /tmp/${SLOT_NAME}.pid
 
-INSTANCE_CONFIG_DIR=/data/instance-config/$INSTANCE_NAME
+INSTANCE_CONFIG_DIR=$CONFIG_DIR/$INSTANCE_NAME
 
 SLOT_DIR=$INSTANCE_CONFIG_DIR/$SLOT_NAME
 CONFIG_FILE=$SLOT_DIR/config
+
+echo $SLOT_NAME: Retrieving configuration from $CONFIG_FILE ...
 
 INSTANCE_ENVIRONMENT_FILE=$INSTANCE_CONFIG_DIR/environment
 SLOT_ENVIRONMENT_FILE=$SLOT_DIR/environment
@@ -51,25 +51,28 @@ if [[ ! -d $SLOT_DIR ]]; then
 fi
 
 if [[ -s $INSTANCE_ENVIRONMENT_FILE ]]; then
-  cat $INSTANCE_ENVIRONMENT_FILE
   source $INSTANCE_ENVIRONMENT_FILE
 fi
 
 if [[ -s $SLOT_ENVIRONMENT_FILE ]]; then
-  cat $SLOT_ENVIRONMENT_FILE
   source $SLOT_ENVIRONMENT_FILE
 fi
 
+sudo chown nobody:nobody $WORK_ROOT_DIR
+
 configured=0
+WORK_DIR=$WORK_ROOT_DIR/$INSTANCE_NAME/$SLOT_NAME/$(hostname)
+echo $SLOT_NAME: Setting work directory to $WORK_DIR
+
+mkdir -p $WORK_DIR
 if [[ -s $CONFIG_FILE ]]; then
   SERVICE_NAME=$(config_get $CONFIG_FILE "SERVICE_NAME")
   SERVICE_BINARY=$(config_get $CONFIG_FILE "SERVICE_BINARY")
   SERVICE_PARAMETERS=$(config_get $CONFIG_FILE "SERVICE_PARAMETERS")
   DELAY_BEFORE=$(config_get $CONFIG_FILE "DELAY_BEFORE")
-  if [[ "$SERVICE_NAME" != "__UNDEFINED__" ]]; then
-    mkdir -p $HOME/$SLOT_NAME
-    if [[ "x$SERVICE_NAME" != "x" ]]; then
-      if curl "$SERVICE_BINARY" -o $HOME/$SLOT_NAME/service-$SLOT_NAME.jar; then
+  if [[ ! -z "$SERVICE_NAME" ]]; then
+    if [[ "$SERVICE_NAME" != "__UNDEFINED__" ]]; then
+      if curl "$SERVICE_BINARY" -o $WORK_DIR/service-$SLOT_NAME.jar; then
         configured=1
         if [[ "$SERVICE_PARAMETERS" == "__UNDEFINED__" ]]; then
           SERVICE_PARAMETERS=""
@@ -78,17 +81,16 @@ if [[ -s $CONFIG_FILE ]]; then
           DELAY_BEFORE="0"
         fi
 
-        cd $HOME/$SLOT_NAME
+        cd $WORK_DIR
         if [[ $DELAY_BEFORE -gt 0 ]]; then
           sleep $DELAY_BEFORE
         fi
-        java $SERVICE_PARAMETERS -jar $HOME/$SLOT_NAME/service-$SLOT_NAME.jar &
+        java $SERVICE_PARAMETERS -jar $WORK_DIR/service-$SLOT_NAME.jar &
         RUN_PID=$!
-        echo $RUN_PID 1>&2
-        ps $RUN_PID 1>&2
-        inotifywait -r -t -1 -e create,delete,modify,close_write,move,attrib $SLOT_DIR
         if kill -0 $RUN_PID; then
+          inotifywait -r -t -1 -e create,delete,modify,close_write,move,attrib $SLOT_DIR
           kill $RUN_PID
+          sleep 30
         fi
         exit 1
       fi

@@ -1,0 +1,4 @@
+[client]
+user=root
+password=CHANGE_THIS_DEFAULT_PASSWORD
+host = 127.0.0.1

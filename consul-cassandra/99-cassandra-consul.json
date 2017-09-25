@@ -1,0 +1,24 @@
+{
+  "enable_script_checks": true,
+  "service": {
+    "name": "cassandra",
+    "address": "",
+    "port": 9042,
+    "checks": [
+      {
+        "id": "nodetool-info",
+        "name": "Node Tool Info",
+        "script": "nodetool info",
+        "interval": "15s",
+        "timeout": "10s"
+      },
+      {
+        "id": "nodetool-status",
+        "name": "Node Tool Status",
+        "script": "nodetool status",
+        "interval": "15s",
+        "timeout": "10s"
+       }
+     ]
+   }
+}

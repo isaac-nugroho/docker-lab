@@ -1,0 +1,15 @@
+{
+  "service": {
+    "name": "hashi-ui",
+    "address": "",
+    "port": 3000,
+    "check": {
+       "id": "http",
+       "name": "HTTP API on port 3000",
+       "http": "http://localhost:3000/",
+       "method": "GET",
+       "interval": "30s",
+       "timeout": "1s"
+     }
+   }
+}

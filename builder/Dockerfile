@@ -28,8 +28,4 @@ RUN         apk --no-cache add \
 
 ADD         supervisor/ /etc/
 
-USER        nobody
-ENV         HOME=/home/nobody
-ENV         USER=nobody
-
 VOLUME      /data

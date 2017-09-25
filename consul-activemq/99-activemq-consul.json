@@ -1,0 +1,15 @@
+{
+  "service": {
+    "name": "activemq",
+    "address": "",
+    "port": 8161,
+    "check": {
+       "id": "http",
+       "name": "HTTP UI on port 8161",
+       "http": "http://localhost:8161/",
+       "method": "GET",
+       "interval": "15s",
+       "timeout": "10s"
+     }
+   }
+}

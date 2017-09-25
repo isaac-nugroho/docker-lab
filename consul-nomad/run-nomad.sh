@@ -30,7 +30,11 @@ fi
 
 NOMAD_BIND=
 if [ -n "$NOMAD_BIND_INTERFACE" ]; then
-  NOMAD_BIND_ADDRESS=$(ip -o -4 addr list $NOMAD_BIND_INTERFACE | head -n1 | awk '{print $4}' | cut -d/ -f1)
+  if [ "$NOMAD_BIND_INTERFACE" = "auto" ]; then
+    NOMAD_BIND_ADDRESS=$(hostname -i)
+  else
+    NOMAD_BIND_ADDRESS=$(ip -o -4 addr list $NOMAD_BIND_INTERFACE | head -n1 | awk '{print $4}' | cut -d/ -f1)
+  fi
   if [ -z "$NOMAD_BIND_ADDRESS" ]; then
     echo "Could not find IP for interface '$NOMAD_BIND_INTERFACE', exiting"
     exit 1

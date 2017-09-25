@@ -31,7 +31,11 @@ fi
 
 CONSUL_BIND=
 if [ ! -z "$CONSUL_BIND_INTERFACE" ]; then
-  CONSUL_BIND_ADDRESS=$(ip -o -4 addr list $CONSUL_BIND_INTERFACE | head -n1 | awk '{print $4}' | cut -d/ -f1)
+  if [ "$CONSUL_BIND_INTERFACE" = "auto" ]; then
+    CONSUL_BIND_ADDRESS=$(hostname -i)
+  else
+    CONSUL_BIND_ADDRESS=$(ip -o -4 addr list $CONSUL_BIND_INTERFACE | head -n1 | awk '{print $4}' | cut -d/ -f1)
+  fi
   if [ -z "$CONSUL_BIND_ADDRESS" ]; then
     echo "Could not find IP for interface '$CONSUL_BIND_INTERFACE', exiting"
     exit 1

@@ -1,0 +1,30 @@
+#!/bin/bash
+
+: ${HOST_COMMAND='hostname -i'}
+
+: ${SEEDS_COMMAND='echo $CASSANDRA_BROADCAST_ADDRESS'}
+
+: ${CASSANDRA_LISTEN_ADDRESS_COMMAND=$HOST_COMMAND}
+: ${CASSANDRA_LISTEN_ADDRESS='auto'}
+if [ "$CASSANDRA_LISTEN_ADDRESS" = 'auto' ]; then
+ CASSANDRA_LISTEN_ADDRESS=$(eval $CASSANDRA_LISTEN_ADDRESS_COMMAND)
+fi
+
+: ${CASSANDRA_BROADCAST_ADDRESS_COMMAND=$HOST_COMMAND}
+: ${CASSANDRA_BROADCAST_ADDRESS="$CASSANDRA_LISTEN_ADDRESS"}
+
+if [ "$CASSANDRA_BROADCAST_ADDRESS" = 'auto' ]; then
+ CASSANDRA_BROADCAST_ADDRESS=$(eval $CASSANDRA_BROADCAST_ADDRESS_COMMAND)
+fi
+
+# wait till node is up booted and joined (UN)
+until nodetool status | grep $CASSANDRA_BROADCAST_ADDRESS | grep -q "UN";
+do
+  sleep 10
+done
+
+echo "REPAIR"
+nodetool repair
+
+echo "CLEANUP"
+nodetool cleanup -j 2

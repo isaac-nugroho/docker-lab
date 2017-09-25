@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-FROM        inugroho/consul-oraclejdk8
+FROM        inugroho/consul-jre
 
 MAINTAINER  isaac.nugroho@gmail.com
 
@@ -43,9 +43,6 @@ RUN         set -x \
 EXPOSE      $ACTIVEMQ_TCP $ACTIVEMQ_AMQP $ACTIVEMQ_STOMP $ACTIVEMQ_MQTT $ACTIVEMQ_WS $ACTIVEMQ_UI
 
 ADD         supervisor/ /etc/
+ADD         99-activemq-consul.json ${CONSUL_CONFIG_DIR}/
 
 VOLUME      /opt/activemq/data
-
-USER        nobody
-ENV         HOME=/home/nobody
-ENV         USER=nobody

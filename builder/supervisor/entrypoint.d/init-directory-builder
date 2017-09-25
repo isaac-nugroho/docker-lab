@@ -5,27 +5,34 @@ if [[ ! -d /data ]]; then
   chown -R nobody:nobody /data
 fi
 
-if [[ -d /data/repository ]]; then
+
+if [[ ! -d /data/repository ]]; then
+  mkdir -p /data/repository
+  chown -R nobody:nobody /data/repository
+fi
+
+if [[ ! -d /data/gradle-workdir ]]; then
+  mkdir -p /data/gradle-workdir
+  chown -R nobody:nobody /data/gradle-workdir
+fi
+
+if [[ ! -d /home/nobody/.m2 ]]; then
   mkdir -p /home/nobody/.m2
+  ln -s /data/repository
+fi
+if [[ ! -d /home/nobody/.m2/repository ]]; then
   ln -s /data/repository /home/nobody/.m2/repository
 fi
-if [[ -d /data/gradle-workdir ]]; then
-  mkdir -p /home/nobody/.gradle
-  if [[ -d /data/gradle-workdir/caches ]]; then
-    ln -s /data/gradle-workdir/caches /home/nobody/.gradle/caches
-  fi
-  if [[ -d /data/gradle-workdir/native ]]; then
-    ln -s /data/gradle-workdir/native /home/nobody/.gradle/native
-  fi
-  if [[ -d /data/gradle-workdir/wrapper ]]; then
-    ln -s /data/gradle-workdir/wrapper /home/nobody/.gradle/wrapper
-  fi
+if [[ ! -d /home/nobody/.gradle ]]; then
+  ln -s /data/gradle-workdir /home/nobody/.gradle
 fi
 
 if [[ -d /data/.ssh ]]; then
   cp /data/.ssh/* /home/nobody/.ssh/
 fi
+
 if [[ -e /data/.gitconfig ]]; then
   cp /data/.gitconfig /home/nobody/
 fi
+
 chown nobody:nobody -R /home/nobody

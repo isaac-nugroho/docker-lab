@@ -53,20 +53,27 @@ RUN         set -x \
             && ln -s $CASSANDRA_CONFIG $CASSANDRA_HOME/conf
 
 ADD         supervisor/ /etc/
+ADD         99-cassandra-consul.json ${CONSUL_CONFIG_DIR}/
 ADD         run-cassandra.sh /
-RUN         chmod +x /run-cassandra.sh
+ADD         node-repair-after-full-boot.sh /
+ADD         replace_node_patch.sh /
+ADD         heap-patch.sh /
+RUN         chmod +x /run-cassandra.sh /node-repair-after-full-boot.sh \
+            && cat replace_node_patch.sh >> $CASSANDRA_CONFIG/cassandra-env.sh \
+            && rm replace_node_patch.sh \
+            && mkdir -p /root/.cassandra /home/cassandra \
+            && echo "[connection]\nclient_timeout=40" > /root/.cassandra/cqlshrc \
+            && awk -v s="$(cat heap-patch.sh)" -e "/\s*#MAX_HEAP_SIZE/ { print s} { print }" /etc/cassandra/cassandra-env.sh > /tmp/cassandra-env.sh \
+            && rm /etc/cassandra/cassandra-env.sh \
+            && mv /tmp/cassandra-env.sh /etc/cassandra/cassandra-env.sh
+
+ENV         CASSANDRA_SEEDS=auto \
+            CASSANDRA_BROADCAST_ADDRESS=auto \
+            CASSANDRA_LISTEN_ADDRESS=auto \
+            CASSANDRA_PARAMS="" \
+            CASSANDRA_MAX_HEAP_SIZE="default" \
+            CASSANDRA_HEAP_NEWSIZE="default"
 
 VOLUME      ["${CASSANDRA_DATA}"]
 
-# 7000: intra-node communication
-# 7001: TLS intra-node communication
-# 7199: JMX
-# 9042: CQL
-# 9160: thrift service
 EXPOSE      7000 7001 7199 9042 9160
-
-
-#CMD         ["bash"]
-USER        nobody
-ENV         HOME=/home/nobody
-ENV         USER=nobody

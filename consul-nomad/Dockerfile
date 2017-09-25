@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-FROM        inugroho/consul-oraclejdk8
+FROM        inugroho/base-consul
 
 MAINTAINER  isaac.nugroho@gmail.com
 
@@ -22,30 +22,28 @@ USER        root
 
 ENV         NOMAD_VERSION=0.6.3
 
+ENV         NOMAD_DATA_DIR=${BASE_DATA}/nomad \
+            NOMAD_CONFIG_DIR=${BASE_CONFIG}/nomad \
+            NOMAD_BIND_INTERFACE="auto" \
+            NOMAD_PARAMS=""
+
 RUN         apk add --no-cache --virtual build-dependencies gnupg openssl \
             && gpg --keyserver pgp.mit.edu --recv-keys 91A6E7F85D05C65630BEF18951852D87348FFC4C \
             && mkdir -p /tmp/build \
             && cd /tmp/build \
+            && HASHICORP_RELEASES=https://releases.hashicorp.com \
             && wget ${HASHICORP_RELEASES}/nomad/${NOMAD_VERSION}/nomad_${NOMAD_VERSION}_linux_amd64.zip \
             && wget ${HASHICORP_RELEASES}/nomad/${NOMAD_VERSION}/nomad_${NOMAD_VERSION}_SHA256SUMS \
             && wget ${HASHICORP_RELEASES}/nomad/${NOMAD_VERSION}/nomad_${NOMAD_VERSION}_SHA256SUMS.sig \
             && gpg --batch --verify nomad_${NOMAD_VERSION}_SHA256SUMS.sig nomad_${NOMAD_VERSION}_SHA256SUMS \
             && grep nomad_${NOMAD_VERSION}_linux_amd64.zip nomad_${NOMAD_VERSION}_SHA256SUMS | sha256sum -c \
             && unzip -d /bin nomad_${NOMAD_VERSION}_linux_amd64.zip \
-            && cd /tmp \
-            && rm -rf /tmp/build \
+            && rm -rf /tmp/* \
             && apk del build-dependencies \
-            && rm -rf /root/.gnupg
-
-EXPOSE      4646 4647 4648
+            && mkdir -p ${NOMAD_CONFIG_DIR} ${NOMAD_DATA_DIR}
 
 ADD         supervisor/ /etc/
-ADD         run-nomad.sh /
-RUN         chmod +x /run-nomad.sh
+ADD         run-nomad.sh /bin/
+RUN         chmod +x /bin/run-nomad.sh
 
-ENV         NOMAD_DATA_DIR=/nomad/data
-ENV         NOMAD_CONFIG_DIR=/nomad/config
-
-USER        nobody
-ENV         HOME=/home/nobody
-ENV         USER=nobody
+EXPOSE      4646 4647 4648

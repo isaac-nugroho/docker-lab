@@ -14,14 +14,16 @@
 # limitations under the License.
 #
 
-FROM        inugroho/base-consul
+FROM        inugroho/consul-nomad
 
 USER        root
 
-# /dev/urandom is used as random source, which is prefectly safe
-# according to http://www.2uo.de/myths-about-urandom/
-RUN         apk add --no-cache \
-                openjdk8-jre \
-            && echo "securerandom.source=file:/dev/urandom" >> /usr/lib/jvm/default-jvm/jre/lib/security/java.security
+ADD         supervisor/ /etc/
+ADD         build/hashi-ui-linux-amd64 /bin/hashi-ui
+ADD         run-hashi-ui.sh /bin/
+ADD         99-hashi-consul.json ${CONSUL_CONFIG_DIR}/
+ADD         99-hashi-nomad.json ${NOMAD_CONFIG_DIR}/
+RUN         chmod +x bin/hashi-ui /bin/run-hashi-ui.sh
 
-ADD         java-home /etc/profile.d/
+ENV         HASHI_UI_PARAMS=""
+EXPOSE      3000
