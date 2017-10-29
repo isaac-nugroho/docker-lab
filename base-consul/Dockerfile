@@ -18,14 +18,13 @@ FROM        inugroho/base-image
 
 USER        root
 
-ENV         CONSUL_VERSION=0.9.3
-
-ENV         BASE_DATA=/data \
-            BASE_CONFIG=/config \
-            CONSUL_DATA_DIR=${BASE_DATA}/consul \
-            CONSUL_CONFIG_DIR=${BASE_CONFIG}/consul \
-            CONSUL_BIND_INTERFACE="auto" \
-            CONSUL_PARAMS=""
+ENV         CONSUL_VERSION=1.0.0
+ENV         BASE_DATA=/data
+ENV         BASE_CONFIG=/config
+ENV         CONSUL_DATA_DIR=${BASE_DATA}/consul
+ENV         CONSUL_CONFIG_DIR=${BASE_CONFIG}/consul
+ENV         CONSUL_BIND_INTERFACE="auto"
+ENV         CONSUL_PARAMS=""
 
 RUN         apk add --no-cache --virtual build-dependencies gnupg openssl \
             && gpg --keyserver pgp.mit.edu --recv-keys 91A6E7F85D05C65630BEF18951852D87348FFC4C \
@@ -38,18 +37,14 @@ RUN         apk add --no-cache --virtual build-dependencies gnupg openssl \
             && gpg --batch --verify consul_${CONSUL_VERSION}_SHA256SUMS.sig consul_${CONSUL_VERSION}_SHA256SUMS \
             && grep consul_${CONSUL_VERSION}_linux_amd64.zip consul_${CONSUL_VERSION}_SHA256SUMS | sha256sum -c \
             && unzip -d /bin consul_${CONSUL_VERSION}_linux_amd64.zip \
-            && cd /tmp \
-            && rm -rf /tmp/build \
+            && rm -rf /tmp/* \
             && apk del build-dependencies \
-            && mkdir -p ${CONSUL_CONFIG_DIR} ${CONSUL_DATA_DIR}
+            && mkdir -p ${CONSUL_CONFIG_DIR} ${CONSUL_DATA_DIR} \
+            && chown -R nobody:nobody ${CONSUL_CONFIG_DIR} ${CONSUL_DATA_DIR}
 
 ADD         supervisor/ /etc/
 ADD         run-consul.sh /bin/
 ADD         00-consul-boot.json ${CONSUL_CONFIG_DIR}
-
-RUN         chmod +x /bin/run-consul.sh \
-            && chown -R nobody:nobody ${CONSUL_CONFIG_DIR} ${CONSUL_DATA_DIR}
-
 
 EXPOSE      8300 8301 8301/udp 8302 8302/udp 8500 8600 8600/udp
 

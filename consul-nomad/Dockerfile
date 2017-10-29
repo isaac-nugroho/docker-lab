@@ -22,10 +22,10 @@ USER        root
 
 ENV         NOMAD_VERSION=0.6.3
 
-ENV         NOMAD_DATA_DIR=${BASE_DATA}/nomad \
-            NOMAD_CONFIG_DIR=${BASE_CONFIG}/nomad \
-            NOMAD_BIND_INTERFACE="auto" \
-            NOMAD_PARAMS=""
+ENV         NOMAD_DATA_DIR=${BASE_DATA}/nomad
+ENV         NOMAD_CONFIG_DIR=${BASE_CONFIG}/nomad
+ENV         NOMAD_BIND_INTERFACE="auto"
+ENV         NOMAD_PARAMS=""
 
 RUN         apk add --no-cache --virtual build-dependencies gnupg openssl \
             && gpg --keyserver pgp.mit.edu --recv-keys 91A6E7F85D05C65630BEF18951852D87348FFC4C \
@@ -44,6 +44,7 @@ RUN         apk add --no-cache --virtual build-dependencies gnupg openssl \
 
 ADD         supervisor/ /etc/
 ADD         run-nomad.sh /bin/
+
 RUN         chmod +x /bin/run-nomad.sh
 
 EXPOSE      4646 4647 4648

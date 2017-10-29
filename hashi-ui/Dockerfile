@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-FROM        inugroho/consul-nomad
+FROM        inugroho/base-consul
 
 USER        root
 
@@ -22,8 +22,8 @@ ADD         supervisor/ /etc/
 ADD         build/hashi-ui-linux-amd64 /bin/hashi-ui
 ADD         run-hashi-ui.sh /bin/
 ADD         99-hashi-consul.json ${CONSUL_CONFIG_DIR}/
-ADD         99-hashi-nomad.json ${NOMAD_CONFIG_DIR}/
 RUN         chmod +x bin/hashi-ui /bin/run-hashi-ui.sh
 
+ENV         NOMAD_ADDRESS=""
 ENV         HASHI_UI_PARAMS=""
 EXPOSE      3000

@@ -22,7 +22,7 @@ USER        root
 ENV         DOCKER_BASE_VERSION=0.0.4
 
 RUN         ALPINE_GLIBC_BASE_URL="https://github.com/sgerrand/alpine-pkg-glibc/releases/download" \
-            && ALPINE_GLIBC_PACKAGE_VERSION="2.25-r0" \
+            && ALPINE_GLIBC_PACKAGE_VERSION="2.26-r0" \
             && ALPINE_GLIBC_BASE_PACKAGE_FILENAME="glibc-$ALPINE_GLIBC_PACKAGE_VERSION.apk" \
             && ALPINE_GLIBC_BIN_PACKAGE_FILENAME="glibc-bin-$ALPINE_GLIBC_PACKAGE_VERSION.apk" \
             && ALPINE_GLIBC_I18N_PACKAGE_FILENAME="glibc-i18n-$ALPINE_GLIBC_PACKAGE_VERSION.apk" \
@@ -99,4 +99,4 @@ RUN         chmod 600 /home/nobody/.ssh/id_rsa /home/nobody/.ssh/authorized_keys
 
 EXPOSE      62435
 
-CMD         ["sudo", "/usr/bin/supervisord", "--configuration=/etc/supervisord.conf"]
+CMD         ["sudo", "-E", "/usr/bin/supervisord", "--configuration=/etc/supervisord.conf"]

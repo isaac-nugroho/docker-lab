@@ -14,10 +14,9 @@
 # limitations under the License.
 #
 
-FROM        inugroho/base-consul
+FROM        inugroho/base-image
 
 USER        root
-
 ENV         JAVA_VERSION=8 \
             JAVA_UPDATE=152 \
             JAVA_BUILD=16 \
@@ -54,3 +53,6 @@ RUN         cd "/tmp" \
             && rm -rf /tmp/* \
 
 ADD         java-home /etc/profile.d/
+USER        nobody
+ENV         HOME=/home/nobody
+ENV         USER=nobody

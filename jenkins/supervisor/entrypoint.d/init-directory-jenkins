@@ -1,0 +1,4 @@
+#!/bin/bash
+echo "initializing directories ..."
+sudo chown jenkins:jenkins -R /usr/share/jenkins/ref "$JENKINS_HOME"
+sudo chmod +x /usr/local/bin/jenkins-support /usr/local/bin/run-jenkins.sh /usr/local/bin/plugins.sh /usr/local/bin/install-plugins.sh

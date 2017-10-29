@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-FROM        inugroho/base-consul
+FROM        inugroho/consul-nomad
 
 USER        root
 

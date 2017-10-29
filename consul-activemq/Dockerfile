@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-FROM        inugroho/consul-jre
+FROM        inugroho/consul-oraclejre8
 
 MAINTAINER  isaac.nugroho@gmail.com
 

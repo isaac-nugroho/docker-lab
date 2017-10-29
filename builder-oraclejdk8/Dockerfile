@@ -14,24 +14,16 @@
 # limitations under the License.
 #
 
-FROM        inugroho/consul-oraclejre8
-
-MAINTAINER  isaac.nugroho@gmail.com
-
-ENV         INSTANCE_NAME=instance-1
-ENV         CONFIG_DIR=/instance-config
-ENV         WORK_ROOT_DIR=/work
+FROM        inugroho/base-oraclejdk8
 
 USER        root
+
+RUN         apk --no-cache add \
+                git \
+                nodejs-current \
+                nodejs-npm
+
 ADD         supervisor/ /etc/
-ADD         run-service /usr/bin/
-ADD         config.shlib /usr/bin/
+ADD         java-home /etc/profile.d/
 
-RUN         chmod +x /usr/bin/run-service \
-            && mkdir -p ${CONFIG_DIR} ${WORK_ROOT_DIR} \
-            && chown nobody:nobody -R ${CONFIG_DIR} ${WORK_ROOT_DIR}
-
-VOLUME      ${CONFIG_DIR}
-VOLUME      ${WORK_ROOT_DIR}
-
-EXPOSE      8180 8181 8182 8183 8184
+VOLUME      /data

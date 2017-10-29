@@ -14,24 +14,14 @@
 # limitations under the License.
 #
 
-FROM        inugroho/consul-oraclejre8
-
-MAINTAINER  isaac.nugroho@gmail.com
-
-ENV         INSTANCE_NAME=instance-1
-ENV         CONFIG_DIR=/instance-config
-ENV         WORK_ROOT_DIR=/work
+FROM        inugroho/consul-nomad
 
 USER        root
-ADD         supervisor/ /etc/
-ADD         run-service /usr/bin/
-ADD         config.shlib /usr/bin/
 
-RUN         chmod +x /usr/bin/run-service \
-            && mkdir -p ${CONFIG_DIR} ${WORK_ROOT_DIR} \
-            && chown nobody:nobody -R ${CONFIG_DIR} ${WORK_ROOT_DIR}
+# /dev/urandom is used as random source, which is prefectly safe
+# according to http://www.2uo.de/myths-about-urandom/
+RUN         apk add --no-cache \
+                openjdk8-jre \
+            && echo "securerandom.source=file:/dev/urandom" >> /usr/lib/jvm/default-jvm/jre/lib/security/java.security
 
-VOLUME      ${CONFIG_DIR}
-VOLUME      ${WORK_ROOT_DIR}
-
-EXPOSE      8180 8181 8182 8183 8184
+ADD         java-home /etc/profile.d/

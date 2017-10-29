@@ -23,7 +23,7 @@ RUN         apk --no-cache add \
               openjdk8 \
               git \
               maven \
-              nodejs \
+              nodejs-current \
               nodejs-npm
 
 ADD         supervisor/ /etc/
